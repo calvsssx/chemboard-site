@@ -1,0 +1,6 @@
+{
+  "name": "chemboard-review",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Private PRC Chemist Licensure Exam reviewer with edge-authenticated access."
+}

@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ChemBoard Review — Sign in</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500;600&display=swap">
+<style>
+:root{
+  --bg:#f4f5f8; --surface:#ffffff; --surface-2:#eef0f5; --fg:#1a1d26; --muted:#5d6475;
+  --faint:#8b92a3; --line:#e2e5ec; --line-strong:#cdd2de; --accent:#4f46e5; --accent-weak:#ecebfd;
+  --accent-ink:#3b32c9; --bad:#c0303a; --bad-weak:#fbe8e9;
+  --shadow:0 1px 2px rgba(20,24,40,.06), 0 18px 40px -20px rgba(20,24,40,.3);
+  --font-display:"IBM Plex Serif",Georgia,serif;
+  --font-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0f1118; --surface:#171a24; --surface-2:#1f2330; --fg:#e8eaf0; --muted:#a2a9bb;
+  --faint:#737b90; --line:#262b38; --line-strong:#333a4b; --accent:#8b84ff; --accent-weak:#241f44;
+  --accent-ink:#a9a3ff; --bad:#f98f98; --bad-weak:#3a1c20;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 18px 44px -20px rgba(0,0,0,.7); color-scheme:dark;
+}}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font-body);line-height:1.5;
+  display:flex;align-items:center;justify-content:center;
+  padding:calc(env(safe-area-inset-top,0px) + 20px) 16px calc(env(safe-area-inset-bottom,0px) + 20px);-webkit-font-smoothing:antialiased}
+.card{width:100%;max-width:380px;background:var(--surface);border:1px solid var(--line);border-radius:18px;
+  box-shadow:var(--shadow);padding:30px 26px 26px}
+.badge{display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:13px;
+  background:var(--accent-weak);color:var(--accent);margin-bottom:16px}
+.badge svg{width:26px;height:26px}
+h1{font-family:var(--font-display);font-size:1.5rem;font-weight:600;margin:0 0 4px;line-height:1.2}
+.sub{color:var(--muted);font-size:.9rem;margin:0 0 22px}
+label{display:block;font-family:var(--font-mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--faint);margin:0 0 6px}
+.field{margin-bottom:15px}
+input{width:100%;background:var(--bg);border:1.5px solid var(--line);border-radius:11px;padding:13px 14px;
+  font-family:var(--font-body);font-size:1rem;color:var(--fg);transition:.15s}
+input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-weak)}
+.pw-wrap{position:relative}
+.pw-wrap input{padding-right:46px}
+.reveal{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:transparent;border:none;
+  color:var(--faint);cursor:pointer;width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:8px}
+.reveal:hover{color:var(--fg)}
+.reveal svg{width:18px;height:18px}
+button.submit{width:100%;margin-top:6px;background:var(--accent);color:#fff;border:none;border-radius:12px;
+  padding:14px;font-family:var(--font-body);font-size:1rem;font-weight:600;cursor:pointer;transition:.15s;
+  display:flex;align-items:center;justify-content:center;gap:9px}
+@media (prefers-color-scheme:dark){button.submit{color:#15161c}}
+button.submit:hover{background:var(--accent-ink)}
+button.submit:disabled{opacity:.6;cursor:default}
+.spin{width:17px;height:17px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;display:none}
+@media (prefers-color-scheme:dark){.spin{border-color:rgba(0,0,0,.3);border-top-color:#15161c}}
+@keyframes sp{to{transform:rotate(360deg)}}
+.err{background:var(--bad-weak);color:var(--bad);border:1px solid var(--bad);border-radius:10px;
+  padding:10px 13px;font-size:.85rem;margin-bottom:15px;display:none;align-items:center;gap:8px}
+.err svg{width:16px;height:16px;flex:none}
+.foot{text-align:center;font-family:var(--font-mono);font-size:.68rem;color:var(--faint);margin-top:18px;letter-spacing:.03em}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+  <main class="card">
+    <div class="badge">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6M10 3v6l-5.5 9.5A2 2 0 0 0 6.2 21h11.6a2 2 0 0 0 1.7-3L14 9V3"/><path d="M7.5 15h9"/></svg>
+    </div>
+    <h1>ChemBoard Review</h1>
+    <p class="sub">Private study access. Please sign in.</p>
+
+    <div class="err" id="err" role="alert">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg>
+      <span id="errMsg"></span>
+    </div>
+
+    <form id="form" autocomplete="on">
+      <div class="field">
+        <label for="username">Username</label>
+        <input id="username" name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <div class="pw-wrap">
+          <input id="password" name="password" type="password" autocomplete="current-password" required>
+          <button type="button" class="reveal" id="reveal" aria-label="Show password" title="Show password">
+            <svg id="eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+      <button type="submit" class="submit" id="submit">
+        <span class="spin" id="spin"></span>
+        <span id="submitLabel">Sign in</span>
+      </button>
+    </form>
+    <p class="foot">PRC Chemist Licensure Exam reviewer</p>
+  </main>
+
+<script>
+(function(){
+  var form=document.getElementById('form'), err=document.getElementById('err'), errMsg=document.getElementById('errMsg');
+  var submit=document.getElementById('submit'), spin=document.getElementById('spin'), label=document.getElementById('submitLabel');
+  var pw=document.getElementById('password'), reveal=document.getElementById('reveal'), eye=document.getElementById('eye');
+  var EYE='<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>';
+  var EYEOFF='<path d="M3 3l18 18M10.6 10.6a3 3 0 0 0 4.2 4.2M9.9 4.6A10 10 0 0 1 12 4.5c6.5 0 10 7 10 7a18 18 0 0 1-3.2 4M6.1 6.1A18 18 0 0 0 2 11.5s3.5 7 10 7a10 10 0 0 0 3.4-.6"/>';
+  reveal.addEventListener('click',function(){
+    var show = pw.type==='password'; pw.type = show?'text':'password';
+    eye.innerHTML = show?EYEOFF:EYE; reveal.setAttribute('aria-label', show?'Hide password':'Show password');
+  });
+  form.addEventListener('submit',function(e){
+    e.preventDefault(); err.style.display='none';
+    submit.disabled=true; spin.style.display='inline-block'; label.textContent='Signing in';
+    fetch('/api/login',{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({username:document.getElementById('username').value, password:pw.value})})
+      .then(function(r){ return r.json().then(function(j){ return {ok:r.ok, j:j}; }); })
+      .then(function(res){
+        if(res.ok && res.j.ok){ window.location.href='/'; return; }
+        throw new Error((res.j&&res.j.error)||'Sign in failed.');
+      })
+      .catch(function(ex){
+        errMsg.textContent=ex.message||'Something went wrong. Try again.'; err.style.display='flex';
+        submit.disabled=false; spin.style.display='none'; label.textContent='Sign in';
+        pw.value=''; pw.focus();
+      });
+  });
+})();
+</script>
+</body>
+</html>
