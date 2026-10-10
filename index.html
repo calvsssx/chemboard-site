@@ -61,6 +61,23 @@ button{font-family:inherit;cursor:pointer}
 .bar>i{display:block;height:100%;width:0;background:var(--accent);border-radius:99px;transition:width .35s cubic-bezier(.4,0,.2,1)}
 body.in-quiz .hdr-progress{display:flex}
 body.in-quiz .brand .sub{display:none}
+#homeBtn{display:none}
+body.in-quiz #homeBtn{display:inline-flex}
+
+/* resume banner */
+.resume-banner{display:flex;align-items:center;gap:13px;width:100%;text-align:left;margin-bottom:22px;
+  background:var(--accent-weak);border:1px solid var(--accent);border-radius:14px;padding:13px 15px;color:var(--fg);transition:.15s}
+.resume-banner:hover{box-shadow:var(--shadow);transform:translateY(-1px)}
+.resume-banner .ic{flex:none;width:38px;height:38px;border-radius:10px;background:var(--accent);display:flex;align-items:center;justify-content:center}
+.resume-banner .ic svg{width:19px;height:19px;color:#fff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .resume-banner .ic svg{color:#15161c}}
+:root[data-theme="dark"] .resume-banner .ic svg{color:#15161c}
+.resume-banner .rb-txt{flex:1;min-width:0;display:flex;flex-direction:column}
+.resume-banner .rb-title{font-weight:600;font-size:.95rem}
+.resume-banner .rb-sub{font-family:var(--font-mono);font-size:.74rem;color:var(--accent-ink)}
+.resume-banner .rb-go{flex:none;font-family:var(--font-mono);font-size:.74rem;font-weight:600;color:#fff;background:var(--accent);padding:7px 13px;border-radius:99px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .resume-banner .rb-go{color:#15161c}}
+:root[data-theme="dark"] .resume-banner .rb-go{color:#15161c}
 @media(max-width:430px){body.in-quiz .brand span.nm{display:none}}
 
 /* ---------- screens ---------- */
@@ -215,6 +232,9 @@ footer{text-align:center;color:var(--faint);font-size:.74rem;font-family:var(--f
       <div class="bar"><i id="hdrBar"></i></div>
     </div>
     <div class="spacer"></div>
+    <button class="iconbtn" id="homeBtn" title="Back to menu" aria-label="Back to menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></svg>
+    </button>
     <button class="iconbtn" id="themeBtn" title="Toggle light / dark" aria-label="Toggle theme">
       <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
     </button>
@@ -227,6 +247,11 @@ footer{text-align:center;color:var(--faint);font-size:.74rem;font-family:var(--f
 <main class="wrap">
   <!-- ============ START ============ -->
   <section class="screen" id="startScreen">
+    <button class="resume-banner" id="resumeBanner" hidden>
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3l14 9-14 9V3z"/></svg></span>
+      <span class="rb-txt"><span class="rb-title">Resume your last session</span><span class="rb-sub" id="resumeSub"></span></span>
+      <span class="rb-go">Continue</span>
+    </button>
     <div class="hero">
       <h1>Philippine Chemist<br>Board Exam Reviewer</h1>
       <p class="lede">Timed practice over every subject in the licensure review set, with the worked explanation shown after each answer. Pick a subject or drill all of them at once.</p>
@@ -329,7 +354,8 @@ var DATA = JSON.parse(document.getElementById('qdata').textContent);
 var SUBJECTS = DATA.subjects;
 // attach subject name to each question + build ALL
 var ALL = [];
-SUBJECTS.forEach(function(s){ s.questions.forEach(function(q){ q.subject = s.subject; ALL.push(q); }); });
+var ID2Q = {};
+SUBJECTS.forEach(function(s){ s.questions.forEach(function(q){ q.subject = s.subject; ALL.push(q); ID2Q[q.id] = q; }); });
 document.getElementById('totalQ').textContent = DATA.total;
 document.getElementById('footCount').textContent = DATA.total;
 
@@ -445,9 +471,47 @@ function startQuiz(){
   show('quiz'); renderQ();
 }
 function makeItem(q){
-  var opts = q.choices.map(function(t,i){ return {text:t, correct:i===q.answer}; });
+  var opts = q.choices.map(function(t,i){ return {text:t, correct:i===q.answer, oi:i}; });
   if(state.shuffleOpt) opts=shuffle(opts);
   return { ref:q, opts:opts, picked:-1, correctIdx:opts.map(function(o){return o.correct;}).indexOf(true) };
+}
+
+// ---------- save / resume an in-progress session (so a refresh doesn't restart at Q1) ----------
+function saveSession(){
+  if(!state.quiz || !state.quiz.length) return;
+  try{
+    mem.session = {
+      v: DATA.total, subjectKey: state.subjectKey, idx: state.idx,
+      correct: state.correct, answered: state.answered,
+      items: state.quiz.map(function(it){
+        return { id: it.ref.id, order: it.opts.map(function(o){ return o.oi; }), picked: it.picked };
+      })
+    };
+    save(mem);
+  }catch(e){}
+}
+function clearSession(){ try{ if(mem.session){ delete mem.session; save(mem); } }catch(e){} }
+function hasResumable(){
+  var s = mem.session;
+  return !!(s && s.v===DATA.total && s.items && s.items.length && (s.idx < s.items.length));
+}
+function resumeSession(){
+  var s = mem.session;
+  if(!hasResumable()){ clearSession(); return false; }
+  var items=[];
+  for(var k=0;k<s.items.length;k++){
+    var si=s.items[k], q=ID2Q[si.id];
+    if(!q || !si.order || si.order.length!==q.choices.length){ clearSession(); return false; }
+    var opts=si.order.map(function(oi){ return {text:q.choices[oi], correct: oi===q.answer, oi:oi}; });
+    items.push({ ref:q, opts:opts, picked:(si.picked==null?-1:si.picked), correctIdx:opts.map(function(o){return o.correct;}).indexOf(true) });
+  }
+  state.subjectKey=s.subjectKey; state.quiz=items;
+  state.idx=Math.min(s.idx||0, items.length-1); state.correct=s.correct||0; state.answered=s.answered||0;
+  state.locked=false; state.filterMissed=false;
+  show('quiz'); renderQ();
+  var cur=state.quiz[state.idx];
+  if(cur && cur.picked>=0){ applyAnswered(cur.picked); }
+  return true;
 }
 
 // ---------- screens ----------
@@ -479,6 +543,7 @@ function renderQ(){
   document.getElementById('nextLabel').textContent = (state.idx===state.quiz.length-1)?'Finish':'Next';
   document.getElementById('skipBtn').hidden = false;
   updateHeader();
+  saveSession();
 }
 function updateHeader(){
   document.getElementById('hdrCount').textContent='Question '+(state.idx+1)+' / '+state.quiz.length;
@@ -487,18 +552,19 @@ function updateHeader(){
 }
 
 var CHECK='<path d="M20 6L9 17l-5-5"/>', CROSS='<path d="M18 6L6 18M6 6l12 12"/>';
-function pick(i){
-  if(state.locked) return;
-  var item=state.quiz[state.idx]; item.picked=i; state.locked=true; state.answered++;
-  var btns=document.getElementById('choices').children;
+// render the answered state for the current question (used by pick and when resuming)
+function applyAnswered(i){
+  state.locked=true;
+  var item=state.quiz[state.idx];
   var isCorrect = item.opts[i].correct;
-  if(isCorrect) state.correct++;
+  var btns=document.getElementById('choices').children;
   for(var k=0;k<btns.length;k++){
     var b=btns[k]; b.disabled=true; var mk=b.querySelector('.mark svg');
+    b.classList.remove('correct','wrong');
     if(item.opts[k].correct){ b.classList.add('correct'); mk.innerHTML=CHECK; }
     else if(k===i){ b.classList.add('wrong'); mk.innerHTML=CROSS; }
+    else { mk.innerHTML=''; }
   }
-  // explanation
   var ex=document.getElementById('explain');
   ex.hidden=false; ex.className='explain '+(isCorrect?'correct':'wrong');
   document.getElementById('verdict').innerHTML=(isCorrect
@@ -511,6 +577,13 @@ function pick(i){
   document.getElementById('nextBtn').disabled=false;
   document.getElementById('skipBtn').hidden=true;
   updateHeader();
+}
+function pick(i){
+  if(state.locked) return;
+  var item=state.quiz[state.idx]; item.picked=i; state.answered++;
+  if(item.opts[i].correct) state.correct++;
+  applyAnswered(i);
+  saveSession();
   document.getElementById('nextBtn').focus();
 }
 
@@ -535,6 +608,7 @@ document.addEventListener('keydown',function(e){
 
 // ---------- finish / results ----------
 function finish(){
+  clearSession();
   var total=state.quiz.length, correct=state.correct;
   var pct=total?Math.round(correct/total*100):0;
   show('results');
@@ -603,8 +677,23 @@ function setFilter(missed){
 document.getElementById('fAll').addEventListener('click',function(){ setFilter(false); });
 document.getElementById('fMissed').addEventListener('click',function(){ setFilter(true); });
 
+// ---------- resume banner + home button ----------
+function updateResumeBanner(){
+  var el=document.getElementById('resumeBanner');
+  if(hasResumable()){
+    var s=mem.session;
+    var subj = s.subjectKey==='ALL' ? 'All subjects' : ((SUBJECTS.filter(function(x){return x.key===s.subjectKey;})[0]||{}).subject||'');
+    document.getElementById('resumeSub').textContent = subj+' — question '+((s.idx||0)+1)+' of '+s.items.length;
+    el.hidden=false;
+  } else { el.hidden=true; }
+}
+document.getElementById('resumeBanner').addEventListener('click', function(){ resumeSession(); });
+document.getElementById('homeBtn').addEventListener('click', function(){ saveSession(); show('start'); refreshBest(); updateResumeBanner(); });
+window.addEventListener('pagehide', saveSession);
+document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='hidden') saveSession(); });
+
 // ---------- result actions ----------
-document.getElementById('newBtn').addEventListener('click',function(){ show('start'); refreshBest(); });
+document.getElementById('newBtn').addEventListener('click',function(){ show('start'); refreshBest(); updateResumeBanner(); });
 document.getElementById('againBtn').addEventListener('click',function(){
   state.quiz=state.quiz.map(function(it){ return makeItem(it.ref); });
   state.idx=0; state.answered=0; state.correct=0; state.locked=false;
@@ -618,6 +707,11 @@ document.getElementById('retryMissed').addEventListener('click',function(){
   show('quiz'); renderQ();
 });
 
-show('start');
+// ---------- boot: resume an in-progress quiz if one was saved, else show the menu ----------
+if(hasResumable()){
+  if(!resumeSession()){ show('start'); updateResumeBanner(); }
+} else {
+  show('start'); updateResumeBanner();
+}
 })();
 </script>
